@@ -11,7 +11,11 @@ public class Main {
 import api.VilageFcstInfoService;
 
 import java.io.IOException;
+<<<<<<< HEAD
 >>>>>>> 주형
+=======
+>>>>>>> Juhyeong
+>>>>>>> master
 
 public class Main {
 
