@@ -1,13 +1,13 @@
 package api_data;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 public class timework {
-    public static Calendar currDateTime() {
+    public static Calendar currDate() {
         SimpleDateFormat currDate = new SimpleDateFormat("yyyyMMdd");
-        SimpleDateFormat currTime = new SimpleDateFormat("HHmm");
         Calendar ret = Calendar.getInstance();
 
         Date curr = new Date(System.currentTimeMillis());
@@ -16,6 +16,8 @@ public class timework {
         return ret;
 
     }
+
+
 
 
 }
