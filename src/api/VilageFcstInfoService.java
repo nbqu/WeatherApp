@@ -1,5 +1,6 @@
 package api;
 import api_data.timework;
+import api_data.RetrievingCoordinate;
 
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -40,6 +41,10 @@ public class VilageFcstInfoService {
         baseDate = currDate.format(curr.getTime());
         baseTime = currTime.format(curr.getTime());
     }
+
+    //api자료를 분리 최저최고 랑 강수량, 강수형태 ~~~
+    //그전에 작동부터 시키고, api_data에 cooridnate class를 넣어야겟네
+
 
     public void getbaseDateTime() {
         System.out.println(baseDate);
