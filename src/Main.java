@@ -16,16 +16,17 @@ public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
         Scanner sc = new Scanner(System.in);
-
-        String serviceKey = "pV9LNHDXZHj6tA2pwp2vSUnN%2F1CkAZeTfQQSjnsxaO9WFCKN0A9vcp%2Becpy6Je6aEoeUdXIeEPI2nzbZZmyXPw%3D%3D"; //Juhyeong
-        VilageFcstInfoService a = new VilageFcstInfoService(serviceKey);
-        a.getbaseDateTime();
-
         //testing Coordinate method
         String top = sc.next();
         String mdl = sc.next();
         String leaf = sc.next();
         RetrievingCoordinate pair = new RetrievingCoordinate(top,mdl,leaf);
+
+        String serviceKey = "pV9LNHDXZHj6tA2pwp2vSUnN%2F1CkAZeTfQQSjnsxaO9WFCKN0A9vcp%2Becpy6Je6aEoeUdXIeEPI2nzbZZmyXPw%3D%3D"; //Juhyeong
+        VilageFcstInfoService a = new VilageFcstInfoService(serviceKey, pair.getX(), pair.getY());
+        a.getbaseDateTime();
+
+
         System.out.println("in this driver class");
         System.out.println(pair.getX() + " " + pair.getY());
         System.out.println("---------");
