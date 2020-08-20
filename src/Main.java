@@ -28,6 +28,11 @@ public class Main {
         RetrievingCoordinate pair = new RetrievingCoordinate(top,mdl,leaf);
         System.out.println("in this driver class");
         System.out.println(pair.getX() + " " + pair.getY());
+        System.out.println("---------");
+        System.out.println(pair.getAr());
+        System.out.println(pair.getAr2());
+        System.out.println(pair.getAr3());
+        //main에 top을
 
 
 
