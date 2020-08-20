@@ -14,7 +14,7 @@ import java.util.Calendar;
 
 public class VilageFcstInfoService {
     private final String dataType = "json";
-    private final String numOfRows = "304"; //시간대별로 최대 14개 데이터 * 8번 발표 * 이틀
+    private final String serviceKey;
     private final int fcstInterval = 3;
     private final int start_time = 2;
 
@@ -22,14 +22,16 @@ public class VilageFcstInfoService {
     // TODO : 최적화해서 48시간치 예보를 가져올 수 있는 방법...
     private String baseDate;
     private String baseTime; // HHmm에서 mm은 버리고 HH만 쓰는 것 같다. 0800 ~ 0859 사이의 시간은 0800으로 인식하여 응답하지만, 0900~1059의 시간으로 조회하면 응답하지 않는다.
-    private String serviceKey;
-    private StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/VilageFcstInfoService/getVilageFcst"); /*URL*/
-    private String x;
-    private String y;
+    private final StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/VilageFcstInfoService/getVilageFcst"); /*URL*/
+    private final String x;
+    private final String y;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+    private final SimpleDateFormat timeFormat = new SimpleDateFormat("HHmm");
+    private String numOfRows;
 
 
     public VilageFcstInfoService(String key, String xc, String yc) throws IOException{
-        setBaseDateTime(timework.currDate());
+        setBaseDateTime_realtime(timework.currDate());
         serviceKey = key;
         this.x = xc;
         this.y = yc;
@@ -37,18 +39,31 @@ public class VilageFcstInfoService {
     }
 
     private void setBaseDateTime_realtime(Calendar curr) {
-        SimpleDateFormat currDate = new SimpleDateFormat("yyyyMMdd");
-        SimpleDateFormat currTime = new SimpleDateFormat("HHmm");
+        numOfRows = "304"; //시간대별로 최대 14개 데이터 * 8번 발표 * 이틀
 
-        int h = (curr.get(Calendar.HOUR_OF_DAY) % fcstInterval) - start_time;
 
-        if (curr.get(Calendar.MINUTE) <= 10) // HH:00 발표는 HH:10 이후에 제공한다.
+        int currHour = curr.get(Calendar.HOUR_OF_DAY);
+        int rem = currHour % fcstInterval; //remainder
+
+        if (rem == start_time) {
+            if (curr.get(Calendar.MINUTE) <= 10) // HH:00 발표는 HH:10 이후에 제공한다.
             curr.add(Calendar.HOUR_OF_DAY, -fcstInterval);
+        }
+        else {
+            int h = -rem -fcstInterval +start_time;
+            curr.add(Calendar.HOUR_OF_DAY, h);
+        }
+        baseDate = dateFormat.format(curr.getTime());
+        baseTime = timeFormat.format(curr.getTime());
+    }
 
-        curr.add(Calendar.HOUR_OF_DAY, -h);
+    private void setBaseDateTime_TMXTMN(Calendar curr) {
+        numOfRows = "152";
+        curr.add(Calendar.DATE, -1);
+        curr.set(Calendar.HOUR_OF_DAY, 23);
 
-        baseDate = currDate.format(curr.getTime());
-        baseTime = currTime.format(curr.getTime());
+        baseDate = dateFormat.format(curr.getTime());
+        baseTime = timeFormat.format(curr.getTime());
     }
 
     //api자료를 분리 최저최고 랑 강수량, 강수형태 ~~~

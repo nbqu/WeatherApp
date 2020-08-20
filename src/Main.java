@@ -19,8 +19,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
 
         String serviceKey = "pV9LNHDXZHj6tA2pwp2vSUnN%2F1CkAZeTfQQSjnsxaO9WFCKN0A9vcp%2Becpy6Je6aEoeUdXIeEPI2nzbZZmyXPw%3D%3D"; //Juhyeong
-        VilageFcstInfoService a = new VilageFcstInfoService(serviceKey);
-        a.getbaseDateTime();
+
 
         //testing Coordinate method
         String top = sc.next();
@@ -33,6 +32,8 @@ public class Main {
         System.out.println(pair.getAr());
         System.out.println(pair.getAr2());
         System.out.println(pair.getAr3());
+        VilageFcstInfoService a = new VilageFcstInfoService(serviceKey, pair.getX(), pair.getY());
+        a.getbaseDateTime();
         //main에 top을
 
 
