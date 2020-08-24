@@ -19,11 +19,12 @@ import java.util.StringTokenizer;
 
 //arraylist 세개 만들어서 리턴으로 하는식으로
 //시 -> 동 -> 구
+//static 붙이면 class 변수가 된다.
 
 public class RetrievingCoordinate {
-    private final String areaTop;
-    private final String areaMdl;
-    private final String areaLeaf;
+    private String areaTop;
+    private String areaMdl;
+    private String areaLeaf;
     private String result;
     private String code = "";
     private String x;
@@ -34,9 +35,9 @@ public class RetrievingCoordinate {
     private JSONParser parser;
     private JSONArray jArr;
     private JSONObject jobj;
-    private final ArrayList<Object> ar;
-    private final ArrayList<Object> ar2;
-    private final ArrayList<Object> ar3;
+    private ArrayList<Object> ar;
+    private ArrayList<Object> ar2;
+    private ArrayList<Object> ar3;
 
     public RetrievingCoordinate(String areaTop, String areaMdl, String areaLeaf) throws IOException, ParseException {
         this.areaTop = areaTop;
@@ -48,6 +49,9 @@ public class RetrievingCoordinate {
         getCoordinate();
     }
 
+    //함수로 받는다
+    //url이랑 areaTop같은거 변수로 받아서
+    //함수 작성
     private void getCoordinate() throws IOException, ParseException {
         //시 검색
         url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/top.json.txt");
@@ -93,7 +97,7 @@ public class RetrievingCoordinate {
 
         parser = new JSONParser();
         jArr = (JSONArray) parser.parse(result);
-
+        //if else는 없애도됨.
         if (areaMdl.equals("종로구")) {
             for (int i = 0; i < jArr.size(); i++) {
                 jobj = (JSONObject) jArr.get(i);

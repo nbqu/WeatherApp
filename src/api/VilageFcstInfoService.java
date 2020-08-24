@@ -44,6 +44,7 @@ public class VilageFcstInfoService {
 
     }
 
+    //5시 18분이면 최근 발표시간대로 옮겨주는 함수
     private void setBaseDateTime_realtime(Calendar curr) {
         numOfRows = "304"; //시간대별로 최대 14개 데이터 * 8번 발표 * 이틀
 
@@ -63,6 +64,7 @@ public class VilageFcstInfoService {
         baseTime = timeFormat.format(curr.getTime());
     }
 
+    //최저 최대 온도구할때 필요한 함수
     private void setBaseDateTime_TMXTMN(Calendar curr) {
         numOfRows = "152";
         curr.add(Calendar.DATE, -1);
