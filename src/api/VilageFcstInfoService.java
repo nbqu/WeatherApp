@@ -23,12 +23,15 @@ public class VilageFcstInfoService {
     private String baseTime; // HHmm에서 mm은 버리고 HH만 쓰는 것 같다. 0800 ~ 0859 사이의 시간은 0800으로 인식하여 응답하지만, 0900~1059의 시간으로 조회하면 응답하지 않는다.
     private String serviceKey;
     private StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/VilageFcstInfoService/getVilageFcst"); /*URL*/
-    private CoordinateXY coordinate;
+    private String x;
+    private String y;
 
 
-    public VilageFcstInfoService(String key) throws IOException{
-        setBaseDateTime_realtime(timework.currDate());
+    public VilageFcstInfoService(String key, String xc, String yc) throws IOException{
+        setBaseDateTime(timework.currDate());
         serviceKey = key;
+        this.x = xc;
+        this.y = yc;
         runAPI();
     }
 
@@ -59,8 +62,8 @@ public class VilageFcstInfoService {
         urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("XML", "UTF-8")); /*요청자료형식(XML/JSON)Default: XML*/
         urlBuilder.append("&" + URLEncoder.encode("base_date","UTF-8") + "=" + URLEncoder.encode(baseDate, "UTF-8")); /*15년 12월 1일발표*/
         urlBuilder.append("&" + URLEncoder.encode("base_time","UTF-8") + "=" + URLEncoder.encode(baseTime, "UTF-8")); /*05시 발표*/
-        urlBuilder.append("&" + URLEncoder.encode("nx","UTF-8") + "=" + URLEncoder.encode("89", "UTF-8")); /*예보지점 X 좌표값*/
-        urlBuilder.append("&" + URLEncoder.encode("ny","UTF-8") + "=" + URLEncoder.encode("90", "UTF-8")); /*예보지점의 Y 좌표값*/
+        urlBuilder.append("&" + URLEncoder.encode("nx","UTF-8") + "=" + URLEncoder.encode(x, "UTF-8")); /*예보지점 X 좌표값*/
+        urlBuilder.append("&" + URLEncoder.encode("ny","UTF-8") + "=" + URLEncoder.encode(y, "UTF-8")); /*예보지점의 Y 좌표값*/
         URL url = new URL(urlBuilder.toString());
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -72,6 +75,7 @@ public class VilageFcstInfoService {
         } else {
             rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
         }
+        System.out.println(url);
         StringBuilder sb = new StringBuilder();
         String line;
         while ((line = rd.readLine()) != null) {
