@@ -1,7 +1,6 @@
 package api;
 import api_data.CoordinateXY;
 import api_data.timework;
-import api_data.RetrievingCoordinate;
 
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -25,17 +24,11 @@ public class VilageFcstInfoService {
     private String serviceKey;
     private StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/VilageFcstInfoService/getVilageFcst"); /*URL*/
     private CoordinateXY coordinate;
-    private String x;
-    private String y;
 
 
     public VilageFcstInfoService(String key) throws IOException{
         setBaseDateTime_realtime(timework.currDate());
-    public VilageFcstInfoService(String key, String xc, String yc) throws IOException{
-        setBaseDateTime(timework.currDate());
         serviceKey = key;
-        this.x = xc;
-        this.y = yc;
         runAPI();
     }
 
@@ -54,12 +47,6 @@ public class VilageFcstInfoService {
         baseTime = currTime.format(curr.getTime());
     }
 
-    //api자료를 분리 최저최고 랑 강수량, 강수형태 ~~~
-    //그전에 작동부터 시키고, api_data에 cooridnate class를 넣어야겟네
-    //1) api자료를 우선 retrieve 시키고
-    //2) 해당 자료를 강수확률, 강수형태, 습도, 하늘상태, 3시간 기온 || 최저, 최고 기운 으로 나눌꺼임
-    //3)
-
     public void getbaseDateTime() {
         System.out.println(baseDate);
         System.out.println(baseTime);
@@ -72,8 +59,8 @@ public class VilageFcstInfoService {
         urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("XML", "UTF-8")); /*요청자료형식(XML/JSON)Default: XML*/
         urlBuilder.append("&" + URLEncoder.encode("base_date","UTF-8") + "=" + URLEncoder.encode(baseDate, "UTF-8")); /*15년 12월 1일발표*/
         urlBuilder.append("&" + URLEncoder.encode("base_time","UTF-8") + "=" + URLEncoder.encode(baseTime, "UTF-8")); /*05시 발표*/
-        urlBuilder.append("&" + URLEncoder.encode("nx","UTF-8") + "=" + URLEncoder.encode(x, "UTF-8")); /*예보지점 X 좌표값*/
-        urlBuilder.append("&" + URLEncoder.encode("ny","UTF-8") + "=" + URLEncoder.encode(y, "UTF-8")); /*예보지점의 Y 좌표값*/
+        urlBuilder.append("&" + URLEncoder.encode("nx","UTF-8") + "=" + URLEncoder.encode("89", "UTF-8")); /*예보지점 X 좌표값*/
+        urlBuilder.append("&" + URLEncoder.encode("ny","UTF-8") + "=" + URLEncoder.encode("90", "UTF-8")); /*예보지점의 Y 좌표값*/
         URL url = new URL(urlBuilder.toString());
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
@@ -85,7 +72,6 @@ public class VilageFcstInfoService {
         } else {
             rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
         }
-        System.out.println(url);
         StringBuilder sb = new StringBuilder();
         String line;
         while ((line = rd.readLine()) != null) {
