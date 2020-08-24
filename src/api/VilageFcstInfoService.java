@@ -1,4 +1,5 @@
 package api;
+import api_data.CoordinateXY;
 import api_data.timework;
 
 import java.io.InputStreamReader;
@@ -22,21 +23,26 @@ public class VilageFcstInfoService {
     private String baseTime; // HHmm에서 mm은 버리고 HH만 쓰는 것 같다. 0800 ~ 0859 사이의 시간은 0800으로 인식하여 응답하지만, 0900~1059의 시간으로 조회하면 응답하지 않는다.
     private String serviceKey;
     private StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/VilageFcstInfoService/getVilageFcst"); /*URL*/
+    private CoordinateXY coordinate;
 
 
     public VilageFcstInfoService(String key) throws IOException{
-        setBaseDateTime(timework.currDate());
+        setBaseDateTime_realtime(timework.currDate());
         serviceKey = key;
         runAPI();
     }
 
-    private void setBaseDateTime(Calendar curr) {
+    private void setBaseDateTime_realtime(Calendar curr) {
         SimpleDateFormat currDate = new SimpleDateFormat("yyyyMMdd");
         SimpleDateFormat currTime = new SimpleDateFormat("HHmm");
-        Calendar cal = Calendar.getInstance();
-        int h = cal.get(Calendar.HOUR_OF_DAY) % fcstInterval;
 
-        curr.add(Calendar.HOUR_OF_DAY, -(h+fcstInterval)+start_time);
+        int h = (curr.get(Calendar.HOUR_OF_DAY) % fcstInterval) - start_time;
+
+        if (curr.get(Calendar.MINUTE) <= 10) // HH:00 발표는 HH:10 이후에 제공한다.
+            curr.add(Calendar.HOUR_OF_DAY, -fcstInterval);
+
+        curr.add(Calendar.HOUR_OF_DAY, -h);
+
         baseDate = currDate.format(curr.getTime());
         baseTime = currTime.format(curr.getTime());
     }
