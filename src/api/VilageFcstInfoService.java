@@ -10,7 +10,13 @@ import java.net.URLEncoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 public class VilageFcstInfoService {
     private final String dataType = "json";
@@ -30,12 +36,12 @@ public class VilageFcstInfoService {
     private String numOfRows;
 
 
-    public VilageFcstInfoService(String key, String xc, String yc) throws IOException{
+    public VilageFcstInfoService(String key, String xc, String yc) throws IOException, ParseException{
         setBaseDateTime_realtime(timework.currDate());
         serviceKey = key;
         this.x = xc;
         this.y = yc;
-        runAPI();
+
     }
 
     private void setBaseDateTime_realtime(Calendar curr) {
@@ -77,11 +83,13 @@ public class VilageFcstInfoService {
         System.out.println(baseTime);
     }
 
-    private void runAPI() throws IOException {
+    public ArrayList<vilageFcstData> runAPI() throws IOException, ParseException {
+        ArrayList<vilageFcstData> ret = new ArrayList<vilageFcstData>();
+
         urlBuilder.append("?" + URLEncoder.encode("ServiceKey","UTF-8") + "=" + serviceKey); /*Service Key*/
         urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
         urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode(numOfRows, "UTF-8")); /*한 페이지 결과 수*/
-        urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode("XML", "UTF-8")); /*요청자료형식(XML/JSON)Default: XML*/
+        urlBuilder.append("&" + URLEncoder.encode("dataType","UTF-8") + "=" + URLEncoder.encode(dataType, "UTF-8")); /*요청자료형식(XML/JSON)Default: XML*/
         urlBuilder.append("&" + URLEncoder.encode("base_date","UTF-8") + "=" + URLEncoder.encode(baseDate, "UTF-8")); /*15년 12월 1일발표*/
         urlBuilder.append("&" + URLEncoder.encode("base_time","UTF-8") + "=" + URLEncoder.encode(baseTime, "UTF-8")); /*05시 발표*/
         urlBuilder.append("&" + URLEncoder.encode("nx","UTF-8") + "=" + URLEncoder.encode(x, "UTF-8")); /*예보지점 X 좌표값*/
@@ -90,7 +98,7 @@ public class VilageFcstInfoService {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
-        System.out.println("Response code: " + conn.getResponseCode());
+        // System.out.println("Response code: " + conn.getResponseCode());
         BufferedReader rd;
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -105,8 +113,81 @@ public class VilageFcstInfoService {
         }
         rd.close();
         conn.disconnect();
-        System.out.println(sb.toString());
+
+        JSONParser parser = new JSONParser();
+        JSONObject obj = (JSONObject) parser.parse(sb.toString());
+        JSONObject parse_response = (JSONObject) obj.get("response");
+        JSONObject parse_body = (JSONObject) parse_response.get("body");
+        JSONObject parse_items = (JSONObject) parse_body.get("items");
+        JSONArray parse_item = (JSONArray) parse_items.get("item");
+
+        for (int i = 0 ; i < parse_item.size(); i++) {
+            JSONObject weather = (JSONObject) parse_item.get(i);
+
+            String date = weather.get("fcstDate").toString();
+            String time = weather.get("fcstTime").toString();
+            String category = weather.get("category").toString();
+            double value = Double.parseDouble(weather.get("fcstValue").toString());
+            if (ret.isEmpty()) {
+                ret.add(new vilageFcstData(date, time));
+                ret.get(0).addDataList(category, value);
+            }
+            else {
+                vilageFcstData d = ret.get(ret.size()-1);
+                if (!d.getFcstTime().equals(time)) {
+                    ret.add(new vilageFcstData(date, time));
+                    ret.get(ret.size()-1).addDataList(category, value);
+                }
+
+                else {
+                    d.addDataList(category, value);
+                }
+            }
+
+        }
+
+        System.out.println(parse_item);
+
+        return ret;
+
     }
 
+
+}
+
+class vilageFcstData {
+    private final String fcstDate;
+    private final String fcstTime;
+    private final ArrayList<node> data = new ArrayList<node>();
+    public vilageFcstData(String date, String time) {
+        fcstDate = date;
+        fcstTime = time;
+    }
+
+    public String getFcstDate() {
+        return fcstDate;
+    }
+
+    public String getFcstTime() {
+        return fcstTime;
+    }
+
+    public ArrayList<node> getData(){
+        return data;
+    }
+
+    public void addDataList (String category, double value) {
+        data.add(new node(category, value));
+    }
+
+    static class node {
+        String category;
+        double value;
+
+        node(String c, double v) {
+            category = c;
+            value = v;
+        }
+    }
 
 }

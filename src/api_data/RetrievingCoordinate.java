@@ -21,9 +21,9 @@ import java.util.StringTokenizer;
 //시 -> 동 -> 구
 
 public class RetrievingCoordinate {
-    private String areaTop;
-    private String areaMdl;
-    private String areaLeaf;
+    private final String areaTop;
+    private final String areaMdl;
+    private final String areaLeaf;
     private String result;
     private String code = "";
     private String x;
@@ -34,9 +34,9 @@ public class RetrievingCoordinate {
     private JSONParser parser;
     private JSONArray jArr;
     private JSONObject jobj;
-    private ArrayList<Object> ar;
-    private ArrayList<Object> ar2;
-    private ArrayList<Object> ar3;
+    private final ArrayList<Object> ar;
+    private final ArrayList<Object> ar2;
+    private final ArrayList<Object> ar3;
 
     public RetrievingCoordinate(String areaTop, String areaMdl, String areaLeaf) throws IOException, ParseException {
         this.areaTop = areaTop;
@@ -45,15 +45,15 @@ public class RetrievingCoordinate {
         this.ar = new ArrayList<Object> ();
         this.ar2 = new ArrayList<Object> ();
         this.ar3 = new ArrayList<Object> ();
-        getCoordinate(this.areaTop, this.areaMdl, this.areaLeaf, this.ar, this.ar2, this.ar3);
+        getCoordinate();
     }
 
-    private void getCoordinate(String areaTop, String areaMdl, String areaLeaf, ArrayList<Object> ar, ArrayList<Object> ar2, ArrayList<Object> ar3) throws IOException, ParseException {
+    private void getCoordinate() throws IOException, ParseException {
         //시 검색
         url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/top.json.txt");
         conn = url.openConnection();
         br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        result = br.readLine().toString();
+        result = br.readLine();
         br.close();
         parser = new JSONParser();
         jArr = (JSONArray) parser.parse(result);
@@ -71,7 +71,7 @@ public class RetrievingCoordinate {
         url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/mdl." + code + ".json.txt");
         conn = url.openConnection();
         br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        result = br.readLine().toString();
+        result = br.readLine();
         br.close();
         parser = new JSONParser();
         jArr = (JSONArray) parser.parse(result);
@@ -88,7 +88,7 @@ public class RetrievingCoordinate {
         url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/leaf." + code + ".json.txt");
         conn = url.openConnection();
         br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        result = br.readLine().toString();
+        result = br.readLine();
         br.close();
 
         parser = new JSONParser();
@@ -101,7 +101,7 @@ public class RetrievingCoordinate {
 
                 String leaf1 = areaLeaf.substring(0, areaLeaf.length() - 3);
                 String leaf2 = areaLeaf.substring(areaLeaf.length() - 3, areaLeaf.length() - 2);
-                String leaf3 = areaLeaf.substring(areaLeaf.length() - 2, areaLeaf.length());
+                String leaf3 = areaLeaf.substring(areaLeaf.length() - 2);
 
                 Pattern pattern = Pattern.compile(leaf1 + "[1-9.]{0,8}" + leaf2 + "[1-9.]{0,8}" + leaf3);
                 Matcher matcher = pattern.matcher((String) jobj.get("value"));

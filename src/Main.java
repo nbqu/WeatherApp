@@ -34,6 +34,7 @@ public class Main {
         System.out.println(pair.getAr3());
         VilageFcstInfoService a = new VilageFcstInfoService(serviceKey, pair.getX(), pair.getY());
         a.getbaseDateTime();
+        a.runAPI();
         //main에 top을
 
 
