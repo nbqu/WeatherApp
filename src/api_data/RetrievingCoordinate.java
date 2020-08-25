@@ -22,11 +22,41 @@ import java.util.StringTokenizer;
 //static 붙이면 class 변수가 된다.
 
 public class RetrievingCoordinate {
+    //주간하고 일일 api가 있기때문에 시,동,구를 하나의 객체로 받을것임
+//    public class Node {
+//        private String top;
+//        private String mid;
+//        private String low;
+//        private URL urlT;
+//        private URL urlM;
+//        private URL urlL;
+//
+//        public Node(String t, String m, String l) throws MalformedURLException {
+//            this.top = t;
+//            this.mid = m;
+//            this.low = l;
+//            this.urlT = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/top.json.txt");
+//            this.urlM = new
+//        }
+//        public String getTop() {
+//            return top;
+//        }
+//        public String getMid() {
+//            return mid;
+//        }
+//        public String getLow() {
+//            return low;
+//        }
+//    }
+
+
+
     private String areaTop;
     private String areaMdl;
     private String areaLeaf;
     private String result;
-    private String code = "";
+//    private String code = "";
+    private String state;
     private String x;
     private String y;
     private URL url;
@@ -35,95 +65,129 @@ public class RetrievingCoordinate {
     private JSONParser parser;
     private JSONArray jArr;
     private JSONObject jobj;
-    private ArrayList<Object> ar;
-    private ArrayList<Object> ar2;
-    private ArrayList<Object> ar3;
+    private ArrayList<ArrayList<Object>> ar;
 
     public RetrievingCoordinate(String areaTop, String areaMdl, String areaLeaf) throws IOException, ParseException {
         this.areaTop = areaTop;
         this.areaMdl = areaMdl;
         this.areaLeaf = areaLeaf;
-        this.ar = new ArrayList<Object> ();
-        this.ar2 = new ArrayList<Object> ();
-        this.ar3 = new ArrayList<Object> ();
+        this.ar = new ArrayList<ArrayList<Object>> (3);
+        for (int i=0;i<3;i++) {
+            ar.add(new ArrayList<Object> ());
+        }
         getCoordinate();
     }
 
-    //함수로 받는다
-    //url이랑 areaTop같은거 변수로 받아서
+    //areatop 과 url을 객체로 받는다.
     //함수 작성
+    private String getURL(String state, String code) {
+        if (code.equals(""))
+            return "http://www.kma.go.kr/DFSROOT/POINT/DATA/" + state + ".json.txt";
+        else
+            return "http://www.kma.go.kr/DFSROOT/POINT/DATA/"+state+"." + code + ".json.txt";
+
+    }
+
     private void getCoordinate() throws IOException, ParseException {
+        String [] address = new String [3];
+        String [] diff = new String[3];
+        address[0] = areaTop;
+        address[1] = areaMdl;
+        address[2] = areaLeaf;
+        diff[0] = "top";
+        diff[1] = "mdl";
+        diff[2] = "leaf";
+        String code = "";
+
+        for (int i=0;i<3;i++) {
+            System.out.println(code);
+            state = diff[i];
+            url = new URL (getURL(state,code));
+            System.out.println(url);
+            conn = url.openConnection();
+            br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            result = br.readLine();
+            br.close();
+            parser = new JSONParser();
+            jArr = (JSONArray) parser.parse(result);
+
+            for (int j = 0; j < jArr.size(); j++) {
+                jobj = (JSONObject) jArr.get(i);
+                ar.get(i).add(jobj.get("value"));
+                System.out.println(address[i]);
+                //code값이 안바뀌어서 동에 대한 url못얻는중 
+                if (jobj.get("value").equals(address[i])) {
+                    code = (String) jobj.get("code");
+                    if (i == 2) {
+                        x = (String) jobj.get("x");
+                        y = (String) jobj.get("y");
+                    }
+
+                }
+            }
+
+        }
+
+
         //시 검색
-        url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/top.json.txt");
-        conn = url.openConnection();
-        br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        result = br.readLine();
-        br.close();
-        parser = new JSONParser();
-        jArr = (JSONArray) parser.parse(result);
-
-        for (int i = 0; i < jArr.size(); i++) {
-            jobj = (JSONObject) jArr.get(i);
-            ar.add(jobj.get("value"));
-
-            if (jobj.get("value").equals(areaTop)) {
-                code = (String) jobj.get("code");
-            }
-        }
-
-        //구 검색
-        url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/mdl." + code + ".json.txt");
-        conn = url.openConnection();
-        br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        result = br.readLine();
-        br.close();
-        parser = new JSONParser();
-        jArr = (JSONArray) parser.parse(result);
-
-        for (int i = 0; i < jArr.size(); i++) {
-            jobj = (JSONObject) jArr.get(i);
-            ar2.add(jobj.get("value"));
-            if (jobj.get("value").equals(areaMdl)) {
-                code = (String) jobj.get("code");
-            }
-        }
-
-        //동 검색
-        url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/leaf." + code + ".json.txt");
-        conn = url.openConnection();
-        br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        result = br.readLine();
-        br.close();
-
-        parser = new JSONParser();
-        jArr = (JSONArray) parser.parse(result);
-        //if else는 없애도됨.
-        if (areaMdl.equals("종로구")) {
-            for (int i = 0; i < jArr.size(); i++) {
-                jobj = (JSONObject) jArr.get(i);
-                ar3.add(jobj.get("value"));
-
-                String leaf1 = areaLeaf.substring(0, areaLeaf.length() - 3);
-                String leaf2 = areaLeaf.substring(areaLeaf.length() - 3, areaLeaf.length() - 2);
-                String leaf3 = areaLeaf.substring(areaLeaf.length() - 2);
-
-                Pattern pattern = Pattern.compile(leaf1 + "[1-9.]{0,8}" + leaf2 + "[1-9.]{0,8}" + leaf3);
-                Matcher matcher = pattern.matcher((String) jobj.get("value"));
-                if (matcher.find()) {
-                    x = (String) jobj.get("x");
-                    y = (String) jobj.get("y");
-                }
-            }
-        } else {
-            for (int i = 0; i < jArr.size(); i++) {
-                jobj = (JSONObject) jArr.get(i);
-                ar3.add(jobj.get("value"));
-                if (jobj.get("value").equals(areaLeaf)) {
-                    x = (String) jobj.get("x");
-                    y = (String) jobj.get("y");
-                }
-            }
-        }
+//        url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/" + state + ".json.txt");
+//        System.out.println("--ang--");
+//        System.out.println(url);
+//        conn = url.openConnection();
+//        br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//        result = br.readLine();
+//        br.close();
+//        parser = new JSONParser();
+//        jArr = (JSONArray) parser.parse(result);
+//
+//        for (int i = 0; i < jArr.size(); i++) {
+//            jobj = (JSONObject) jArr.get(i);
+//            ar.add(jobj.get("value"));
+//
+//            if (jobj.get("value").equals(areaTop)) {
+//                code = (String) jobj.get("code");
+//            }
+//        }
+//
+//        state = "mdl";
+//        //구 검색
+//        url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/"+state+"." + code + ".json.txt");
+//        System.out.println("---b---");
+//        System.out.println(url);
+//        conn = url.openConnection();
+//        br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//        result = br.readLine();
+//        br.close();
+//        parser = new JSONParser();
+//        jArr = (JSONArray) parser.parse(result);
+//
+//        for (int i = 0; i < jArr.size(); i++) {
+//            jobj = (JSONObject) jArr.get(i);
+//            ar2.add(jobj.get("value"));
+//            if (jobj.get("value").equals(areaMdl)) {
+//                code = (String) jobj.get("code");
+//            }
+//        }
+//
+//        //동 검색
+//        url = new URL("http://www.kma.go.kr/DFSROOT/POINT/DATA/leaf." + code + ".json.txt");
+//        conn = url.openConnection();
+//        br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+//        result = br.readLine();
+//        br.close();
+//
+//        parser = new JSONParser();
+//        jArr = (JSONArray) parser.parse(result);
+//        //if else는 없애도됨.
+//
+//        for (int i = 0; i < jArr.size(); i++) {
+//            jobj = (JSONObject) jArr.get(i);
+//            ar3.add(jobj.get("value"));
+//            if (jobj.get("value").equals(areaLeaf)) {
+//                x = (String) jobj.get("x");
+//                y = (String) jobj.get("y");
+//            }
+//        }
     }
 
     public String getX() {
@@ -132,7 +196,6 @@ public class RetrievingCoordinate {
     public String getY() {
         return y;
     }
-    public ArrayList<Object> getAr() {return ar;}
-    public ArrayList<Object> getAr2() {return ar2;}
-    public ArrayList<Object> getAr3() {return ar3;}
+    public ArrayList<ArrayList<Object>> getAr() {return ar;}
+
 }

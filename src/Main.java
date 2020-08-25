@@ -29,9 +29,9 @@ public class Main {
         System.out.println("in this driver class");
         System.out.println(pair.getX() + " " + pair.getY());
         System.out.println("---------");
-        System.out.println(pair.getAr());
-        System.out.println(pair.getAr2());
-        System.out.println(pair.getAr3());
+        System.out.println(pair.getAr().get(0));
+        System.out.println(pair.getAr().get(1));
+        System.out.println(pair.getAr().get(2));
         VilageFcstInfoService a = new VilageFcstInfoService(serviceKey, pair.getX(), pair.getY());
         a.getbaseDateTime();
         a.runAPI();
