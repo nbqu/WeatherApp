@@ -1,7 +1,5 @@
 package api;
-import api_data.CoordinateXY;
 import api_data.timework;
-import api_data.RetrievingCoordinate;
 
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
