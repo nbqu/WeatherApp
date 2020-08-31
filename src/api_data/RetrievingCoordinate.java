@@ -24,8 +24,8 @@ import java.util.StringTokenizer;
 public class RetrievingCoordinate {
 
     private String code = "";
-    private String x;
-    private String y;
+    private String x = "60";
+    private String y = "127";
 
 
     public RetrievingCoordinate() {
@@ -86,6 +86,14 @@ public class RetrievingCoordinate {
                     y = (String) jobj.get("y");
                 }
             }
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void initCode() {
+        code = "";
     }
 
 }

@@ -103,7 +103,7 @@ public class VilageFcstInfoService {
         } else {
             rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
         }
-        System.out.println(url);
+        //System.out.println(url);
         StringBuilder sb = new StringBuilder();
         String line;
         while ((line = rd.readLine()) != null) {
@@ -144,7 +144,7 @@ public class VilageFcstInfoService {
 
         }
 
-        System.out.println(parse_item);
+        //System.out.println(parse_item);
 
         return ret;
 
@@ -153,39 +153,3 @@ public class VilageFcstInfoService {
 
 }
 
-class vilageFcstData {
-    private final String fcstDate;
-    private final String fcstTime;
-    private final ArrayList<node> data = new ArrayList<node>();
-    public vilageFcstData(String date, String time) {
-        fcstDate = date;
-        fcstTime = time;
-    }
-
-    public String getFcstDate() {
-        return fcstDate;
-    }
-
-    public String getFcstTime() {
-        return fcstTime;
-    }
-
-    public ArrayList<node> getData(){
-        return data;
-    }
-
-    public void addDataList (String category, double value) {
-        data.add(new node(category, value));
-    }
-
-    static class node {
-        String category;
-        double value;
-
-        node(String c, double v) {
-            category = c;
-            value = v;
-        }
-    }
-
-}
