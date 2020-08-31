@@ -3,6 +3,7 @@ import java.util.Scanner;
 
 import api.VilageFcstInfoService;
 import api_data.RetrievingCoordinate;
+import api_data.MidFcstRetrievingCoordinate;
 
 import org.json.simple.parser.ParseException;
 
