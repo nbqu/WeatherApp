@@ -4,10 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.*;
 
 import api.VilageFcstInfoService;
 import api.vilageFcstData;
@@ -43,6 +40,7 @@ public class GUI extends JFrame implements ActionListener{
     }
 
     public void villageForecast() throws IOException, ParseException, java.text.ParseException {
+
         JPanel test = new JPanel();
         test.setLayout(new FlowLayout());
 
@@ -94,9 +92,8 @@ public class GUI extends JFrame implements ActionListener{
             printCode.setText(rc.getCode()+" "+rc.getX()+" "+rc.getY());
             try {
                 VilageFcstInfoService vf = new VilageFcstInfoService("pV9LNHDXZHj6tA2pwp2vSUnN%2F1CkAZeTfQQSjnsxaO9WFCKN0A9vcp%2Becpy6Je6aEoeUdXIeEPI2nzbZZmyXPw%3D%3D", rc.getX(), rc.getY());
-                System.out.println("processing...");
                 data = vf.runAPI();
-                displayData();
+                displayVilData();
             } catch (IOException | ParseException | java.text.ParseException ioException) {
                 ioException.printStackTrace();
             }
@@ -109,18 +106,52 @@ public class GUI extends JFrame implements ActionListener{
 
     }
 
-    public void displayData() throws java.text.ParseException {
+    public void displayVilData() throws java.text.ParseException {
+        String[] passingData = {"UUU", "VVV", "WAV", "VEC", "WSD"};
+        String[] rainingData = {"PTY", "S06", "R06"};
+        HashMap<String, String> dict = new HashMap<String, String>(){{
+            put("POP", "강수확률");
+            put("PTY", "강수형태");
+            put("R06", "강수량");
+            put("REH", "습도");
+            put("S06", "적설량");
+            put("SKY", "날씨");
+            put("T3H", "기온");
+            put("TMN", "최저기온");
+            put("TMX", "최고기온");
+        }};
+        HashMap<String, String> degDict = new HashMap<String, String>(){{
+            put("POP", "%");
+            put("R06", "mm");
+            put("REH", "%");
+            put("S06", "cm");
+            put("T3H", "°C");
+            put("TMN", "°C");
+            put("TMX", "°C");
+        }};
+        HashMap<Integer, String> PTYDict = new HashMap<Integer, String>(){{
+            put(1, "비");
+            put(2, "비/눈");
+            put(3, "눈");
+            put(4, "소나기");
+        }};
+        HashMap<Integer, String> SKYDict = new HashMap<Integer, String>(){{
+            put(1, "맑음");
+            put(3, "구름 많음");
+            put(4, "비");
+        }};
         JPanel weatherPanel = new JPanel();
         JScrollPane scrollPane = new JScrollPane(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        weatherPanel.setLayout(new FlowLayout());
+        weatherPanel.setLayout(new GridLayout(4, 4));
 
         SimpleDateFormat oldDateFormat = new SimpleDateFormat("yyyyMMdd");
         SimpleDateFormat oldTimeFormat = new SimpleDateFormat("HHmm");
         SimpleDateFormat newDateFormat = new SimpleDateFormat("M/d");
         SimpleDateFormat newTimeFormat = new SimpleDateFormat("HH:mm");
 
-        for (vilageFcstData d:
-         data) {
+        for (int i = 0; i < 16; i++) { // 최근 48시간
+            String msg;
+            vilageFcstData d = data.get(i);
             JPanel weatherSubPanel = new JPanel();
             weatherSubPanel.setLayout(new FlowLayout());
             Date date = oldDateFormat.parse(d.getFcstDate());
@@ -131,12 +162,20 @@ public class GUI extends JFrame implements ActionListener{
             weatherSubPanel.add(newDate);
             weatherSubPanel.add(newTime);
 
-            for (Map.Entry<String, Double> e: d.getData().entrySet()) {
-                JLabel line = new JLabel("key : " + e.getKey() + ", value : " + e.getValue().toString() + "\n");
-                //System.out.println(e.getKey() + " : " + e.getValue());
+            for (Map.Entry<String, Double> e : d.getData().entrySet()) {
+                if (Arrays.asList(passingData).contains(e.getKey())) // 불필요한 자료 pass
+                    continue;
+                if (Arrays.asList(rainingData).contains(e.getKey()) && e.getValue().intValue() == 0) // 강수, 적설량 0이면 pass
+                    continue;
+                if (e.getKey().equals("PTY"))
+                    msg = dict.get(e.getKey()) + " : " + PTYDict.get(e.getValue().intValue());
+                else if(e.getKey().equals("SKY"))
+                    msg = dict.get(e.getKey()) + " : " + SKYDict.get(e.getValue().intValue());
+                else
+                    msg = dict.get(e.getKey()) + " : " + e.getValue().intValue() + degDict.get(e.getKey());
+                JLabel line = new JLabel(msg);
                 weatherSubPanel.add(line);
             }
-
             weatherPanel.add(weatherSubPanel);
     }
         add(scrollPane);
@@ -147,3 +186,14 @@ public class GUI extends JFrame implements ActionListener{
 
     }
 }
+
+/*
+* POP : 강수확률
+* PTY : 강수형태
+* R06 : 강수량
+* REH : 습도
+* S06 : 적설량
+* SKY : 하늘상태
+* T3H : 3시간 기온, TMN : 최저기온, TMX : 최고기온
+*
+* */

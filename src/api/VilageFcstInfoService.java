@@ -103,7 +103,7 @@ public class VilageFcstInfoService {
         } else {
             rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
         }
-        //System.out.println(url);
+        System.out.println(url);
         StringBuilder sb = new StringBuilder();
         String line;
         while ((line = rd.readLine()) != null) {
