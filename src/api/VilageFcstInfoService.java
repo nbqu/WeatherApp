@@ -72,11 +72,6 @@ public class VilageFcstInfoService {
         baseTime = timeFormat.format(curr.getTime());
     }
 
-    //api자료를 분리 최저최고 랑 강수량, 강수형태 ~~~
-    //그전에 작동부터 시키고, api_data에 cooridnate class를 넣어야겟네
-    //1) api자료를 우선 retrieve 시키고
-    //2) 해당 자료를 강수확률, 강수형태, 습도, 하늘상태, 3시간 기온 || 최저, 최고 기운 으로 나눌꺼임
-    //3)
 
     public void getbaseDateTime() {
         System.out.println(baseDate);
