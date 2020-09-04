@@ -10,8 +10,7 @@ import java.net.URLEncoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -39,7 +38,6 @@ public class MidFcstInfoService {
     public MidFcstInfoService() throws IOException, ParseException {
         gettingBaseTime(timework.currDate());
         this.time = baseDate + "" + baseTime;
-        System.out.println(time);
         run();
 
     }
@@ -49,20 +47,28 @@ public class MidFcstInfoService {
         int firstHour = 6;
         int secondHour = 18;
         int currMin = curr.get(Calendar.MINUTE);
-        boolean flag = false;
 
         //1) Minute conversion
         curr.add(Calendar.MINUTE, -currMin);
         //2) Hour conversion
         int currHour = curr.get(Calendar.HOUR_OF_DAY);
+        int hour = -1;
 
-        if (currHour < firstHour)
-            flag = true;
+        if (currHour < firstHour) hour = 1;
+        else if (currHour < secondHour) hour = 2;
+        else hour = 3;
 
-        if (flag)
-            curr.add(Calendar.HOUR_OF_DAY, -(firstHour + currHour));
-        else
-            curr.add(Calendar.HOUR_OF_DAY, -(currHour - secondHour));
+        switch (hour) {
+            case 1:
+                curr.add(Calendar.HOUR_OF_DAY, -(currHour + firstHour)); //0시부터 6시 사이 이전날 18시값 return
+                break;
+            case 2:
+                curr.add(Calendar.HOUR_OF_DAY, -(currHour - firstHour)); //6시부터 18시사이
+                break;
+            case 3:
+                curr.add(Calendar.HOUR_OF_DAY, -(currHour - secondHour)); //18시부터 24시사이
+                break;
+        }
     }
 
     private void gettingBaseTime(Calendar curr) {
@@ -102,41 +108,43 @@ public class MidFcstInfoService {
         }
         rd.close();
         conn.disconnect();
-
+        System.out.println(sb);
         String toBeParsed = sb.toString();
-        System.out.println(toBeParsed);
-
-        //Parsing by JSON
         JSONParser parser = new JSONParser();
         JSONObject obj = (JSONObject) parser.parse(toBeParsed);
-        // response 키를 가지고 데이터를 파싱
         JSONObject parse_response = (JSONObject) obj.get("response");
-        // response 로 부터 body 찾기
         JSONObject parse_body = (JSONObject) parse_response.get("body");
-        // body 로 부터 items 찾기
         JSONObject parse_items = (JSONObject) parse_body.get("items");
-
-        // items로 부터 itemlist 를 받기
         JSONArray parse_item = (JSONArray) parse_items.get("item");
-        String category;
-        JSONObject weather; // parse_item은 배열형태이기 때문에 하나씩 데이터를 하나씩 가져올때 사용
+        System.out.println("---------");
         System.out.println(parse_item);
 
-        ArrayList<Object> wf = new ArrayList<Object> ();
-        ArrayList<Object> rnST = new ArrayList<Object> ();
+        JSONObject weather; // parse_item은 배열형태이기 때문에 하나씩 데이터를 하나씩 가져올때 사용
 
-        // TODO : parse시 안의 값들이 random하게 섞임. 뭔가 sort시킬 방법이 필요함
-        // TODO : weather을 이용해서 parse시키는데 시간대로별로 다달라서 시간대별로 parse시킬수있는 방법이 필요함
-        // TODO : 생각해낸 방법은 저 jsonobject를 hash에 넣어서 wf 와 rnst를 나뉘고 그이후 hash를 sort
-        // TODO : 문제는 jsonOjbect 를 hash화 시키는걸 모르겠음.
+        // TODO : weather을 이용해서 parse시키는데 시간대로별로 다달라서 시간대별로 sort시켜야함
 
         weather = (JSONObject) parse_item.get(0);
 
-//        for (String i: weather) {
-//
-//        }
+        TreeMap<Object, Object> state = new TreeMap<>();
+        TreeMap<Object, Object> prob = new TreeMap<>();
 
-    }
+
+        //iterating over weather
+        for (Object keyStr : weather.keySet()) {
+            Object value = weather.get(keyStr);
+            if (keyStr.toString().contains("wf"))
+                state.put(keyStr, value);
+
+            if (keyStr.toString().contains("rnSt"))
+                prob.put(keyStr, value);
+
+        }
+
+        System.out.println(state);
+        System.out.println(prob);
+        1) gui input을 받는데
+                2) 어캐 그 input이 class적용시키는데
+        3) api 두개를 돌려서
 
     //return url
     private StringBuilder gettingURL () throws UnsupportedEncodingException {
@@ -157,29 +165,29 @@ public class MidFcstInfoService {
 
     }
 
-
-
-
-
-
-
-    //2. API run 하는 코드
-    //input: 예보 구역 코드, 발표 시각
-    //output: 2d array 3일,4일,5일 기준 강수확률, state, 최저기온, 최고 기온 return
-
-
+    //종합을해서 data 구조를 만들꺼냐 너가 말한 data class
+        //gui에 써먹을꺼냐?
+        //날짜에 따라 상태?가 달라짐 어떤건 am/ pm 8일부터는 하나로 통합이됨.
+        //자료형은 만들고
+        //
 
 
 }
 
+//class Data implements Comparable<Data> {
+//    String key;
+//
+//    Data(String key) {
+//        this.key = key;
+//    }
+//
+////    @Override
+////    public int compareTo(Data key) {
+////        if (this.key > key) return 1;
+////        else return 0;
+////    }
+//}
 
-
-
-class MidFcstData {
-
-
-
-}
 
 
 

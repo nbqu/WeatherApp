@@ -36,7 +36,6 @@ public class GUI extends JFrame implements ActionListener{
 
         setTitle("WeatherApp");
         setVisible(true);
-
     }
 
     public void villageForecast() throws IOException, ParseException, java.text.ParseException {
@@ -67,7 +66,7 @@ public class GUI extends JFrame implements ActionListener{
             printCode.setText(rc.getCode());
 
         });
-
+        //김천시, 대구시 code
         location2.addActionListener(e -> {
             rc.initCode();
             rc.setCode(mdl, location2.getSelectedItem().toString());

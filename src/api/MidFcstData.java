@@ -1,2 +1,10 @@
-package api;public class MidFcstData {
+package api;
+
+public class MidFcstData {
+
+
+
+
+
+
 }
