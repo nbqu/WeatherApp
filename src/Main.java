@@ -1,20 +1,18 @@
-<<<<<<< HEAD
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.StringTokenizer;
-
-public class Main {
-=======
-import api.VilageFcstInfoService;
-
 import java.io.IOException;
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 주형
 =======
 >>>>>>> Juhyeong
+>>>>>>> master
+=======
+import api.VilageFcstInfoService;
 >>>>>>> master
 
 public class Main {
