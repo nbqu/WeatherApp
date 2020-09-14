@@ -3,10 +3,7 @@ import api_data.timework;
 
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -32,6 +29,7 @@ public class MidFcstInfoService {
     private String dataType = "JSON";
     private String coordinate = "11B00000";
     private String time;
+    private int type;
 
 
     //constructor
@@ -91,12 +89,13 @@ public class MidFcstInfoService {
 
     //중기육상예보 api => return 강수확률, state
     private void run() throws IOException, ParseException {
-        URL url = new URL(gettingURL().toString());
+        type = 1;
+        URL url = new URL(gettingURL(type).toString());
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
         BufferedReader rd;
-        if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+        if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         } else {
             rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
@@ -108,7 +107,6 @@ public class MidFcstInfoService {
         }
         rd.close();
         conn.disconnect();
-        System.out.println(sb);
         String toBeParsed = sb.toString();
         JSONParser parser = new JSONParser();
         JSONObject obj = (JSONObject) parser.parse(toBeParsed);
@@ -116,12 +114,14 @@ public class MidFcstInfoService {
         JSONObject parse_body = (JSONObject) parse_response.get("body");
         JSONObject parse_items = (JSONObject) parse_body.get("items");
         JSONArray parse_item = (JSONArray) parse_items.get("item");
-        System.out.println("---------");
-        System.out.println(parse_item);
+
 
         JSONObject weather; // parse_item은 배열형태이기 때문에 하나씩 데이터를 하나씩 가져올때 사용
 
         // TODO : weather을 이용해서 parse시키는데 시간대로별로 다달라서 시간대별로 sort시켜야함
+        // TODO : treemap사용해서 sort 문제 해결
+        // 다른 api하나 돌리고
+        // 자료구조 저장
 
         weather = (JSONObject) parse_item.get(0);
 
@@ -142,13 +142,16 @@ public class MidFcstInfoService {
 
         System.out.println(state);
         System.out.println(prob);
-        1) gui input을 받는데
-                2) 어캐 그 input이 class적용시키는데
-        3) api 두개를 돌려서
+    }
+
 
     //return url
-    private StringBuilder gettingURL () throws UnsupportedEncodingException {
-        StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst"); /*URL*/
+    private StringBuilder gettingURL (int type) throws UnsupportedEncodingException {
+        if (type == 1)
+            StringBuilder urlBuilder = new Stringbuilder("http://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst"); /*URL*/
+//        else
+//            StringBuilder urlBuilder = new Stringbuilder("http://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa"); /*URL*/
+//
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=" + serviceKey); /*Service Key*/
         urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode(pageNo, "UTF-8")); /*페이지번호*/
         urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode(numOfRows, "UTF-8")); /*한 페이지 결과 수*/
@@ -161,7 +164,34 @@ public class MidFcstInfoService {
 
 
     //중기기온조회 api => return 최저, 최고 기온
-    private void run2() {
+    private void run2() throws IOException {
+        type = 2;
+        URL url = new URL(gettingURL(type).toString());
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Content-type", "application/json");
+        BufferedReader rd;
+        if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        } else {
+            rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+        }
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = rd.readLine()) != null) {
+            sb.append(line);
+        }
+        rd.close();
+        conn.disconnect();
+        System.out.println(sb);
+        String toBeParsed = sb.toString();
+        JSONParser parser = new JSONParser();
+        JSONObject obj = (JSONObject) parser.parse(toBeParsed);
+        JSONObject parse_response = (JSONObject) obj.get("response");
+        JSONObject parse_body = (JSONObject) parse_response.get("body");
+        JSONObject parse_items = (JSONObject) parse_body.get("items");
+        JSONArray parse_item = (JSONArray) parse_items.get("item");
+
 
     }
 
@@ -173,21 +203,5 @@ public class MidFcstInfoService {
 
 
 }
-
-//class Data implements Comparable<Data> {
-//    String key;
-//
-//    Data(String key) {
-//        this.key = key;
-//    }
-//
-////    @Override
-////    public int compareTo(Data key) {
-////        if (this.key > key) return 1;
-////        else return 0;
-////    }
-//}
-
-
 
 

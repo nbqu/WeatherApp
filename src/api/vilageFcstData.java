@@ -10,9 +10,6 @@ import java.util.Map;
 //3 -> ㅇㅇㄹㅇㄹㅇㄹ 4-> ㅇㄹㅇㄹㅇㄹㅇㄹ
 //3 -> 오전 오후 나누면안됨?
 
-34567 오전 오후
-8910 오전 오후 X
-
 
 
 public class vilageFcstData {
@@ -43,18 +40,6 @@ public class vilageFcstData {
     public void addDataList(String category, double value) {
         data.put(category, value);
     }
-
-
-    //3일 오전
-    //hash <강수확률, 30>
-    // <최저, 10>
-    // <최고, 20>
-
-
-    3일 오후
-            ~~
-    ~~
-    ~~
 
 
 }
