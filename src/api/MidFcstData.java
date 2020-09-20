@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class MidFcstData {
     private final String fcstDate;
     private final String fcstTime;
-    private HashMap<String, Double> data = new HashMap<String, Double>();
+    private HashMap<String, Object> data = new HashMap<String, Object>();
 
     public MidFcstData (String date, String time) {
         fcstDate = date;
@@ -20,15 +20,19 @@ public class MidFcstData {
         return fcstTime;
     }
 
-    public HashMap<String, Double> getData() {
+    public HashMap<String, Object> getData() {
         return data;
     }
 
-
-    public void updateData (String category, Double value) {
+    public void updateData (String category, Object value) {
         data.put(category, value);
     }
 
+
+    //1) rnSt = 강수 확률
+    //2) wf = 날씨
+    //3) taMin = 최저 기온
+    //4) taMax = 최고 기온
 
 
 

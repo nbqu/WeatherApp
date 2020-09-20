@@ -29,9 +29,14 @@ public class MidFcstInfoService {
     private final String pageNo = "1";
     private final String numOfRows = "10";
     private final String dataType = "JSON";
-    private String coordinate = "11B10101";
+    private String coordinate2 = "11B20604";
+    private String coordinate1 = "11B00000";
+    private String coordinate = "11B00000";
     private String time;
     private int type;
+    private TreeMap<Node, Object> tree;
+    private TreeMap<Object, Object> state;
+    private TreeMap<Object, Object> prob;
 
 
 
@@ -41,7 +46,7 @@ public class MidFcstInfoService {
         this.time = baseDate + "" + baseTime;
         run();
         run2();
-
+        gettingData();
     }
 
     //1) time conversion
@@ -89,8 +94,6 @@ public class MidFcstInfoService {
         return baseDate;
     }
 
-
-
     //중기육상예보 api => return 강수확률, state
     private void run() throws IOException, ParseException {
         type = 1;
@@ -121,23 +124,18 @@ public class MidFcstInfoService {
         JSONObject weather; // parse_item은 배열형태이기 때문에 하나씩 데이터를 하나씩 가져올때 사용
 
         weather = (JSONObject) parse_item.get(0);
-
-        TreeMap<Object, Object> state = new TreeMap<>();
-        TreeMap<Object, Object> prob = new TreeMap<>();
+        state = new TreeMap<>();
+        prob = new TreeMap<>();
 
         //iterating over weather
+        //10일이랑 3일꺼랑 스왑.
         for (Object keyStr : weather.keySet()) {
             Object value = weather.get(keyStr);
             if (keyStr.toString().contains("wf"))
                 state.put(keyStr, value);
-
             if (keyStr.toString().contains("rnSt"))
                 prob.put(keyStr, value);
-
         }
-
-//        System.out.println(state);
-//        System.out.println(prob);
     }
 
     //중기기온조회 api => return 최저, 최고 기온
@@ -177,54 +175,100 @@ public class MidFcstInfoService {
         JSONObject weather; // parse_item은 배열형태이기 때문에 하나씩 데이터를 하나씩 가져올때 사용
 
         weather = (JSONObject) parse_item.get(0);
+        tree = new TreeMap<>(new SortByDay());
 
-        ArrayList<Node> temp = new ArrayList<>();
-        TreeMap<Node, Object> tree = new TreeMap<>(new SortByDay());
-
-
-        //음.... tree에 모든값이 들어가 있지가 않아용... 해결해야해용
         for (Object keyStr: weather.keySet()) {
             Object value = weather.get(keyStr);
             String key = keyStr.toString();
             if (key.contains("High") || key.contains("Low") || key.contains("regId")) continue;
 
             Node node = new Node (key);
-            temp.add(node);
             tree.put(node, value);
-
         }
-
-        for (Map.Entry<Node, Object> entry : tree.entrySet()) {
-            System.out.println(entry.getKey().getState());
-            System.out.println(entry.getKey().getDay());
-            System.out.println(entry.getValue());
-            System.out.println("--------");
-        }
-
-
-
-//        for (Map.Entry<Object, Object> entry : tempMax.entrySet()) {
-//            //현재 date +3 + 4 +%
-//            String category = entry.getKey().toString();
-//            Long value = (Long) entry.getValue();
-//
-//            if (ret.isEmpty()) {
-//                ret.add(new MidFcstData())
-//                ret.get(0).updateData(category,value);
-//            }
-
-
     }
 
+    //Optimization 필요
+    public ArrayList<MidFcstData> gettingData () {
+        ArrayList<MidFcstData> ret = new ArrayList<>();
+        //state 와 prob 까지 combine시켜서 data에 저장
+        int ind = -1;
+        int ptr = 0;
+        int day = 2;
 
+        for (Map.Entry<Node, Object> entry : tree.entrySet()) {
+            Node key = entry.getKey();
+            Object value = entry.getValue();
+            String category = key.getState();
+
+            //different day
+            if (ptr%2 == 0) {
+                ind += 1;
+                day += 1;
+                ret.add(new MidFcstData(baseDate + day, baseTime));
+                ret.get(ind).updateData(category, value);
+            }
+            if (ptr%2 != 0) {
+                ret.get(ind).updateData(category,value);
+            }
+            ptr += 1;
+        }
+
+        ind = -1;
+        ptr = 0;
+        day = 2;
+        for (Map.Entry<Object, Object> entry: state.entrySet()) {
+            String category = (String) entry.getKey();
+            Object value = entry.getValue();
+            //different day
+            if (ptr%2 == 0) {
+                ind += 1;
+                day += 1;
+                ret.get(ind).updateData(category, value);
+            }
+            if (ptr%2 != 0) {
+                ret.get(ind).updateData(category,value);
+            }
+            ptr += 1;
+        }
+
+        ind = -1;
+        ptr = 0;
+        day = 2;
+        for (Map.Entry<Object, Object> entry: prob.entrySet()) {
+            String category = (String) entry.getKey();
+            Object value = entry.getValue();
+            //different day
+            if (ptr%2 == 0) {
+                ind += 1;
+                day += 1;
+                ret.get(ind).updateData(category, value);
+            }
+            if (ptr%2 != 0) {
+                ret.get(ind).updateData(category,value);
+            }
+            ptr += 1;
+        }
+
+
+        for (int i=0; i<ret.size(); i++) {
+            System.out.println(ret.get(i).getFcstDate());
+            System.out.println(ret.get(i).getData());
+        }
+
+        return ret;
+    }
 
     //return url
     private StringBuilder gettingURL (int type) throws UnsupportedEncodingException {
         StringBuilder urlBuilder = new StringBuilder();
-        if (type == 1)
+        if (type == 1) {
             urlBuilder.append(urlBuilder1);
-        else
+            coordinate = coordinate1;
+        } else {
             urlBuilder.append(urlBuilder2);
+            coordinate = coordinate2;
+        }
+
 
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=" + serviceKey); /*Service Key*/
         urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode(pageNo, "UTF-8")); /*페이지번호*/
@@ -235,8 +279,6 @@ public class MidFcstInfoService {
 
         return urlBuilder;
     }
-
-
 
     public class Node {
         private String state;
@@ -263,10 +305,12 @@ public class MidFcstInfoService {
         public int compare(Node o1, Node o2) {
             if (o1.getDay() > o2.getDay()) return 1;
             else if (o1.getDay() < o2.getDay()) return -1;
+            else if (o1.getDay().equals(o2.getDay())) {
+                if (o1.getState().contains("Max")) return 1;
+                else return -1;
+            }
             else return 0;
         }
-
-
     }
 
 

@@ -19,8 +19,6 @@ public class Main {
         //GUI g = new GUI();
 
         MidFcstInfoService obj = new MidFcstInfoService();
-
-
     }
 }
 
