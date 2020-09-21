@@ -19,6 +19,7 @@ public class Main {
         //GUI g = new GUI();
 
         MidFcstInfoService obj = new MidFcstInfoService();
+        //엑셀 파일 상대주소로 변경 + api data package안에 따로 상대주소를 return하는 method 만들기.
     }
 }
 
