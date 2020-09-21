@@ -235,16 +235,16 @@ public class MidFcstInfoService {
                 Node key = entry.getKey();
                 Object value = entry.getValue();
                 String category = key.getState();
-
                 //first time filling up ret arraylist (temp)
                 if (i == 0) {
                     if (ptr % 2 == 0) {
                         ind += 1;
                         day += 1;
                         dayCount.add(Calendar.DATE, day);
-                        System.out.println(dayCount.get(Calendar.DATE));
-                        ret.add(new MidFcstData(baseDate, baseTime));
+                        String tempa = dateFormat.format(dayCount.getTime());
+                        ret.add(new MidFcstData(tempa, baseTime));
                         ret.get(ind).updateData(category, value);
+                        dayCount.add(Calendar.DATE, -day);
                     }
                     if (ptr % 2 != 0)
                         ret.get(ind).updateData(category, value);
