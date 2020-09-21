@@ -33,11 +33,13 @@ public class MidFcstInfoService {
     private String coordinate1 = "11B00000";
     private String coordinate = "11B00000";
     private String time;
+    private Calendar dayCount;
     private int type;
-    private TreeMap<Node, Object> tree;
-    private TreeMap<Object, Object> state;
-    private TreeMap<Object, Object> prob;
+    private TreeMap<Node, Object> temp;
+    private TreeMap<Node, Object> state;
+    private TreeMap<Node, Object> prob;
 
+    //coordinate 연동
 
 
     //constructor
@@ -68,12 +70,15 @@ public class MidFcstInfoService {
         switch (hour) {
             case 1:
                 curr.add(Calendar.HOUR_OF_DAY, -(currHour + firstHour)); //0시부터 6시 사이 이전날 18시값 return
+                dayCount = curr;
                 break;
             case 2:
                 curr.add(Calendar.HOUR_OF_DAY, -(currHour - firstHour)); //6시부터 18시사이
+                dayCount = curr;
                 break;
             case 3:
                 curr.add(Calendar.HOUR_OF_DAY, -(currHour - secondHour)); //18시부터 24시사이
+                dayCount = curr;
                 break;
         }
     }
@@ -124,17 +129,19 @@ public class MidFcstInfoService {
         JSONObject weather; // parse_item은 배열형태이기 때문에 하나씩 데이터를 하나씩 가져올때 사용
 
         weather = (JSONObject) parse_item.get(0);
-        state = new TreeMap<>();
-        prob = new TreeMap<>();
+        state = new TreeMap<>(new SortByDay());
+        prob = new TreeMap<>(new SortByDay());
 
-        //iterating over weather
-        //10일이랑 3일꺼랑 스왑.
-        for (Object keyStr : weather.keySet()) {
+        for (Object keyStr: weather.keySet()) {
             Object value = weather.get(keyStr);
-            if (keyStr.toString().contains("wf"))
-                state.put(keyStr, value);
-            if (keyStr.toString().contains("rnSt"))
-                prob.put(keyStr, value);
+            String key = keyStr.toString();
+            if (key.contains("regId")) continue;
+
+            Node node = new Node (key);
+            if (key.contains("wf"))
+                state.put(node, value);
+            if (key.contains("rnSt"))
+                prob.put(node, value);
         }
     }
 
@@ -175,7 +182,7 @@ public class MidFcstInfoService {
         JSONObject weather; // parse_item은 배열형태이기 때문에 하나씩 데이터를 하나씩 가져올때 사용
 
         weather = (JSONObject) parse_item.get(0);
-        tree = new TreeMap<>(new SortByDay());
+        temp = new TreeMap<>(new SortByDay());
 
         for (Object keyStr: weather.keySet()) {
             Object value = weather.get(keyStr);
@@ -183,79 +190,8 @@ public class MidFcstInfoService {
             if (key.contains("High") || key.contains("Low") || key.contains("regId")) continue;
 
             Node node = new Node (key);
-            tree.put(node, value);
+            temp.put(node, value);
         }
-    }
-
-    //Optimization 필요
-    public ArrayList<MidFcstData> gettingData () {
-        ArrayList<MidFcstData> ret = new ArrayList<>();
-        //state 와 prob 까지 combine시켜서 data에 저장
-        int ind = -1;
-        int ptr = 0;
-        int day = 2;
-
-        for (Map.Entry<Node, Object> entry : tree.entrySet()) {
-            Node key = entry.getKey();
-            Object value = entry.getValue();
-            String category = key.getState();
-
-            //different day
-            if (ptr%2 == 0) {
-                ind += 1;
-                day += 1;
-                ret.add(new MidFcstData(baseDate + day, baseTime));
-                ret.get(ind).updateData(category, value);
-            }
-            if (ptr%2 != 0) {
-                ret.get(ind).updateData(category,value);
-            }
-            ptr += 1;
-        }
-
-        ind = -1;
-        ptr = 0;
-        day = 2;
-        for (Map.Entry<Object, Object> entry: state.entrySet()) {
-            String category = (String) entry.getKey();
-            Object value = entry.getValue();
-            //different day
-            if (ptr%2 == 0) {
-                ind += 1;
-                day += 1;
-                ret.get(ind).updateData(category, value);
-            }
-            if (ptr%2 != 0) {
-                ret.get(ind).updateData(category,value);
-            }
-            ptr += 1;
-        }
-
-        ind = -1;
-        ptr = 0;
-        day = 2;
-        for (Map.Entry<Object, Object> entry: prob.entrySet()) {
-            String category = (String) entry.getKey();
-            Object value = entry.getValue();
-            //different day
-            if (ptr%2 == 0) {
-                ind += 1;
-                day += 1;
-                ret.get(ind).updateData(category, value);
-            }
-            if (ptr%2 != 0) {
-                ret.get(ind).updateData(category,value);
-            }
-            ptr += 1;
-        }
-
-
-        for (int i=0; i<ret.size(); i++) {
-            System.out.println(ret.get(i).getFcstDate());
-            System.out.println(ret.get(i).getData());
-        }
-
-        return ret;
     }
 
     //return url
@@ -269,7 +205,6 @@ public class MidFcstInfoService {
             coordinate = coordinate2;
         }
 
-
         urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=" + serviceKey); /*Service Key*/
         urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode(pageNo, "UTF-8")); /*페이지번호*/
         urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode(numOfRows, "UTF-8")); /*한 페이지 결과 수*/
@@ -280,6 +215,74 @@ public class MidFcstInfoService {
         return urlBuilder;
     }
 
+    //rnSt 랑 wf 는 7일 이후 한개씩
+    //하지만 temp는 각 날마다 두개씩 retrieving.
+    private void fillRet (ArrayList<MidFcstData> ret) {
+        TreeMap<Node, Object> var = null;
+        int ind;
+        int ptr;
+        int day;
+
+        for (int i = 0; i < 3; i++) {
+            ind = -1;
+            ptr = 0;
+            day = 2;
+            if (i == 0) var = temp;
+            if (i == 1) var = state;
+            if (i == 2) var = prob;
+
+            for (Map.Entry<Node, Object> entry : var.entrySet()) {
+                Node key = entry.getKey();
+                Object value = entry.getValue();
+                String category = key.getState();
+
+                //first time filling up ret arraylist (temp)
+                if (i == 0) {
+                    if (ptr % 2 == 0) {
+                        ind += 1;
+                        day += 1;
+                        dayCount.add(Calendar.DATE, day);
+                        System.out.println(dayCount.get(Calendar.DATE));
+                        ret.add(new MidFcstData(baseDate, baseTime));
+                        ret.get(ind).updateData(category, value);
+                    }
+                    if (ptr % 2 != 0)
+                        ret.get(ind).updateData(category, value);
+                    ptr += 1;
+                } else {
+                    //day before 7
+                    if (day <= 7) {
+                        if (ptr % 2 == 0) {
+                            ind += 1;
+                            day += 1;
+                            ret.get(ind).updateData(category, value);
+                        }
+                        if (ptr % 2 != 0)
+                            ret.get(ind).updateData(category, value);
+                        ptr += 1;
+                    } else {
+                        ind += 1;
+                        day += 1;
+                        ret.get(ind).updateData(category, value);
+                    }
+                }
+            }
+        }
+    }
+
+    public ArrayList<MidFcstData> gettingData () {
+        ArrayList<MidFcstData> ret = new ArrayList<>();
+        fillRet(ret);
+
+        for (int i=0; i<ret.size(); i++) {
+            System.out.println(ret.get(i).getFcstDate());
+            System.out.println(ret.get(i).getData());
+        }
+
+        return ret;
+    }
+
+    //Node class for treemap DS
     public class Node {
         private String state;
         private Integer day = -1;
@@ -300,14 +303,17 @@ public class MidFcstInfoService {
 
     }
 
+    //custom comparator
     public class SortByDay implements Comparator<Node> {
         @Override
         public int compare(Node o1, Node o2) {
             if (o1.getDay() > o2.getDay()) return 1;
             else if (o1.getDay() < o2.getDay()) return -1;
             else if (o1.getDay().equals(o2.getDay())) {
-                if (o1.getState().contains("Max")) return 1;
-                else return -1;
+                if (o1.getState().contains("Max") || o1.getState().contains("Pm"))
+                    return 1;
+                else
+                    return -1;
             }
             else return 0;
         }

@@ -18,6 +18,7 @@ public class MidFcstRetrievingCoordinate {
     }
 
     public XSSFCell GettingCoordinate() throws IOException {
+        //상대 주소로 바꾸기
          FileInputStream file = new FileInputStream("/Users/TRECE/Desktop/Git/WeatherApp/MidFcstCoordinateDataSet/MidFcstData.xlsx");
          XSSFWorkbook workbook = new XSSFWorkbook(file);
 
